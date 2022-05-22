@@ -1,8 +1,8 @@
-require("@nomiclabs/hardhat-waffle");
-require('dotenv').config();
-const { assert, expect } = require('chai');
+require("@nomiclabs/hardhat-waffle")
+require('dotenv').config()
 require('solidity-coverage')
 require("./tasks")
+require("hardhat-gas-reporter")
 
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
@@ -20,12 +20,12 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
  * @type import('hardhat/config').HardhatUserConfig
  */
 module.exports = {
-  defaultNetwork: "rinkeby",
+  defaultNetwork: "hardhat",
   networks: {
     hardhat: {
     },
     rinkeby: {
-      gasPrice: 20000000000,
+      gasPrice: 50,
       gas: 10000000,
       url: `https://rinkeby.infura.io/v3/${process.env.INFURAKEY}`,
       //url: `https://eth-rinkeby.alchemyapi.io/v2/${process.env.RINKEBYKEY}`,
@@ -40,11 +40,11 @@ module.exports = {
     }
   },
   solidity: {
-    version : "0.8.4",
+    version : "0.8.13",
     settings: {
       optimizer: {
         enabled: true,
-        runs: 200
+        runs: 1000
       }
     }
   },

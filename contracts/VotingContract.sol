@@ -2,6 +2,11 @@
 pragma solidity >=0.8.13;
 
 contract VotingContract{
+    event CreateVote(uint voteId, address[] proposalNames);
+    event Voted(address voter, uint voteId, uint proposalId);
+    event End(uint voteId);
+    event Withdrawal(uint voteId);
+
 
     address public owner;
 
@@ -30,6 +35,7 @@ contract VotingContract{
         Vote storage _vote = votings[voteAmount++];
         _vote.proposals = proposalNames;
         _vote.endAt = block.timestamp + 3 days;
+        emit CreateVote(voteAmount, proposalNames);
     }
 
     function vote(uint voteId, uint proposalId) external payable {
@@ -41,6 +47,7 @@ contract VotingContract{
         _vote.isVoted[msg.sender] = true;
         _vote.voteCount[ _vote.proposals[proposalId]]++;
         _vote.balance += msg.value;
+        emit Voted(msg.sender, voteId, proposalId);
 
     }
     function end(uint voteId) external{
@@ -63,12 +70,14 @@ contract VotingContract{
         _vote.winner = _vote.proposals[_winner];
         payable(_vote.proposals[_winner]).transfer(_balance);
         _vote.balance -= _balance;
+        emit End(voteId);
     }
     function withdrawal(uint voteId) external onlyOwner{
         Vote storage _vote = votings[voteId];
         require(_vote.ended, "not ended");
         payable(owner).transfer(_vote.balance);
         _vote.balance = 0;
+        emit Withdrawal(voteId);
     }
 
     function getVoteCount(uint voteId, address proposal) external view returns(uint){

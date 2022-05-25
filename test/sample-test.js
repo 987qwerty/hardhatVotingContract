@@ -26,11 +26,14 @@ describe("VotingContract", function () {
   })
 
   it("Should vote", async function(){
-    await votingContract.connect(await hre.ethers.getSigner(accounts[4].address)).vote(0, 1, {value : ethers.utils.parseEther("0.01")})
-    expect(await votingContract.getVoteCount(0, accounts[2].address)).deep.equal(1)
-    expect(await votingContract.voteBalance(0)).deep.equal(ethers.utils.parseEther("0.01"))
+    await votingContract.connect(await hre.ethers.getSigner(accounts[4].address)).vote(0, 0, {value : ethers.utils.parseEther("0.01")})
+    await votingContract.connect(await hre.ethers.getSigner(accounts[3].address)).vote(0, 1, {value : ethers.utils.parseEther("0.01")})
+    await votingContract.connect(await hre.ethers.getSigner(accounts[2].address)).vote(0, 1, {value : ethers.utils.parseEther("0.01")})
+
+    expect(await votingContract.getVoteCount(0, accounts[2].address)).deep.equal(2)
+    expect(await votingContract.voteBalance(0)).deep.equal(ethers.utils.parseEther("0.03"))
     expect(await votingContract.isEnded(0)).deep.equal(false)
-    expect(await votingContract.getMaxVotes(0)).deep.equal(1)
+    expect(await votingContract.getMaxVotes(0)).deep.equal(2)
 
   })
   it("Shouldnt end", async function(){
@@ -90,13 +93,13 @@ describe("VotingContract", function () {
     expect((await votingContract.votings(0)).ended).deep.equal(true)
     expect(await votingContract.getLeader(0)).deep.equal(accounts[2].address)
 
-    expect(await hre.ethers.provider.getBalance( accounts[2].address)).deep.equal(_balance.add( ethers.utils.parseEther("0.01") * 0.9))
+    expect(await hre.ethers.provider.getBalance( accounts[2].address)).deep.equal(_balance.add(ethers.utils.parseEther("0.03").mul(9).div(10)))
     _balance = await hre.ethers.provider.getBalance( accounts[0].address)
     await votingContract.withdrawal(0)
 
     expect(await hre.ethers.provider.getBalance(accounts[0].address))
-        .to.be.within((_balance.add( ethers.utils.parseEther("0.01") * 0.1 - ethers.utils.parseEther("0.0001"))),
-        _balance.add( ethers.utils.parseEther("0.01") * 0.1)) //range because of gas spending
+        .to.be.within((_balance.add( ethers.utils.parseEther("0.03") * 0.1 - ethers.utils.parseEther("0.0001"))),
+        _balance.add( ethers.utils.parseEther("0.03") * 0.1)) //range because of gas spending
   })
 
 
@@ -132,6 +135,13 @@ describe("VotingContract", function () {
       expect(error.toString()).contain("only owner")
     }
   })
-
+  it("Shouldnt add", async function(){
+    try {
+      await votingContract.connect(await hre.ethers.getSigner(accounts[4].address)).addProposals([accounts[4].address], 0)
+      expect(true).deep.equal(false)
+    } catch (error){
+      expect(error.toString()).contain("only owner")
+    }
+  })
 
 })

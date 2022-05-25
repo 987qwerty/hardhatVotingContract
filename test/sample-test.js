@@ -20,12 +20,17 @@ describe("VotingContract", function () {
     expect(await votingContract.getProposals(0)).deep.equal([accounts[1].address, accounts[2].address, accounts[3].address])
     expect((await votingContract.votings(0)).endAt.toNumber()).greaterThan((await hre.ethers.provider.getBlock()).timestamp)
   })
+  it("Should add proposals", async function(){
+    await votingContract.addProposals([accounts[4].address], 0)
+    expect(await votingContract.getProposals(0)).deep.equal([accounts[1].address, accounts[2].address, accounts[3].address, accounts[4].address])
+  })
 
   it("Should vote", async function(){
     await votingContract.connect(await hre.ethers.getSigner(accounts[4].address)).vote(0, 1, {value : ethers.utils.parseEther("0.01")})
     expect(await votingContract.getVoteCount(0, accounts[2].address)).deep.equal(1)
     expect(await votingContract.voteBalance(0)).deep.equal(ethers.utils.parseEther("0.01"))
     expect(await votingContract.isEnded(0)).deep.equal(false)
+    expect(await votingContract.getMaxVotes(0)).deep.equal(1)
 
   })
   it("Shouldnt end", async function(){
@@ -44,14 +49,7 @@ describe("VotingContract", function () {
       expect(error.toString()).contain("not ended")
     }
   })
-  it("Shouldnt get winner", async function(){
-    try {
-      expect(await votingContract.getWinner(0))
-      expect(true).deep.equal(false)
-    } catch (error){
-      expect(error.toString()).contain("not ended")
-    }
-  })
+
   it("Shouldnt vote", async function(){
     try {
       ( await votingContract.connect(await hre.ethers.getSigner(accounts[4].address)).vote(0, 1, {value : ethers.utils.parseEther("0.01")}))
@@ -90,7 +88,7 @@ describe("VotingContract", function () {
 
 
     expect((await votingContract.votings(0)).ended).deep.equal(true)
-    expect(await votingContract.getWinner(0)).deep.equal(accounts[2].address)
+    expect(await votingContract.getLeader(0)).deep.equal(accounts[2].address)
 
     expect(await hre.ethers.provider.getBalance( accounts[2].address)).deep.equal(_balance.add( ethers.utils.parseEther("0.01") * 0.9))
     _balance = await hre.ethers.provider.getBalance( accounts[0].address)
@@ -126,7 +124,7 @@ describe("VotingContract", function () {
       expect(error.toString()).contain("only owner")
     }
   })
-  it("Shouldnt withdrawal", async function(){
+  it("Shouldnt withdrawal 2", async function(){
     try {
       await votingContract.connect(await hre.ethers.getSigner(accounts[4].address)).withdrawal(0)
       expect(true).deep.equal(false)
@@ -134,5 +132,6 @@ describe("VotingContract", function () {
       expect(error.toString()).contain("only owner")
     }
   })
+
 
 })
